@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#09090b">
+    <meta name="description" content="Interactive HTML5 Canvas star trail visualizer & recording studio">
+    <title>Astral Trail Studio</title>
+    
+    <!-- PWA Manifest & Icons -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <canvas id="starCanvas"></canvas>
+
+    <div class="ui-layer">
+        <header class="top-bar">
+            <span class="brand">ASTRAL_TRAIL // v3.0</span>
+            <span id="recStatus" class="status-badge">IDLE</span>
+        </header>
+
+        <aside id="controlsPanel" class="controls-panel">
+            <div class="panel-header" id="panelToggle">
+                <span>⚙️ Tuval Ayarları</span>
+                <button class="toggle-btn" id="btnCollapse">▼</button>
+            </div>
+
+            <div class="panel-content" id="panelContent">
+                <div class="control-group">
+                    <label>Hareket Modu:</label>
+                    <div class="btn-grid" id="motionSelector">
+                        <button class="btn active" data-value="circle">⭕ Matris Çember</button>
+                        <button class="btn" data-value="free">✨ Serbest Akış</button>
+                        <button class="btn" data-value="zen">🧘 Zen Modu</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Şekil:</label>
+                    <div class="btn-grid" id="shapeSelector">
+                        <button class="btn active" data-value="star">✦ Yıldız</button>
+                        <button class="btn" data-value="heart">♥ Kalp</button>
+                        <button class="btn" data-value="dot">• Nokta</button>
+                        <button class="btn" data-value="diamond">◆ Elmas</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Renk:</label>
+                    <div class="btn-grid" id="colorSelector">
+                        <button class="btn active" data-value="rainbow">Karma</button>
+                        <button class="btn" data-value="white">Beyaz</button>
+                        <button class="btn" data-value="yellow">Sarı</button>
+                        <button class="btn" data-value="purple">Mor</button>
+                        <button class="btn" data-value="red">Kırmızı</button>
+                    </div>
+                </div>
+
+                <div class="control-group slider-group">
+                    <label>Kaybolma Hızı (Kuyruk): <span id="valDecay">0.003</span></label>
+                    <input type="range" id="sliderDecay" min="0.001" max="0.015" step="0.001" value="0.003">
+                </div>
+
+                <div class="control-group slider-group">
+                    <label>Kuyruk Yoğunluğu: <span id="valDensity">2</span></label>
+                    <input type="range" id="sliderDensity" min="1" max="6" step="1" value="2">
+                </div>
+
+                <div class="control-group slider-group">
+                    <label>Şekil Boyutu: <span id="valSize">8</span></label>
+                    <input type="range" id="sliderSize" min="3" max="20" step="1" value="8">
+                </div>
+
+                <div class="action-grid">
+                    <button id="btnChaos" class="btn btn-chaos">🌀 Kaos Modu</button>
+                    <label for="imgUpload" class="btn btn-secondary">📁 Görsel Ekle</label>
+                    <input type="file" id="imgUpload" accept="image/*">
+                    <button id="btnClear" class="btn btn-secondary">🗑️ Temizle</button>
+                    <button id="btnRecord" class="btn btn-record">🎥 .WebM Kaydet</button>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
