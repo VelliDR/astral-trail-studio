@@ -10,7 +10,6 @@ export class Particle {
         this.isChaos = state.isChaos;
 
         if (this.isChaos) {
-            // KAOS MODU: Rastgele şekil, neon renk ve çılgın dinamik fizik
             this.shape = CHAOS_SHAPES[Math.floor(Math.random() * CHAOS_SHAPES.length)];
             this.color = CHAOS_COLORS[Math.floor(Math.random() * CHAOS_COLORS.length)];
             
@@ -23,17 +22,13 @@ export class Particle {
             this.decay = state.decayRate * (0.6 + Math.random() * 0.8);
 
         } else if (state.motionMode === 'zen') {
-            // ZEN / MEDİTASYON MODU: Keplerian yörünge, nefes halkası ve ipek kuyruk
             this.shape = state.shape;
             this.motionMode = 'zen';
 
             this.radius = Math.max(10, Math.hypot(x - centerPoint.x, y - centerPoint.y));
             this.angle = Math.atan2(y - centerPoint.y, x - centerPoint.x);
             
-            // Kepler Yasası: Yarıçap büyüdükçe dış halkaların dönüş hızı azalır
             this.keplerSpeed = 0.035 / Math.sqrt(this.radius);
-            
-            // Çok yavaş, uzun ömürlü kuyruklar
             this.decay = 0.0006;
             this.size = state.baseSize * (0.7 + Math.random() * 0.5);
 
@@ -41,7 +36,6 @@ export class Particle {
             this.color = palette[Math.floor(Math.random() * palette.length)];
 
         } else {
-            // NORMAL MODLAR (Matris Çember & Serbest Akış)
             this.shape = state.shape;
             this.motionMode = state.motionMode;
 
@@ -69,17 +63,15 @@ export class Particle {
         this.life = 1.0;
     }
 
-    update(centerPoint) {
+    update(centerPoint, dtFactor = 1) {
         if (this.isChaos) {
-            // Kaos Güncellemesi
-            this.angle += this.speed;
-            this.x += Math.cos(this.angle) * 1.5 + this.vx + (Math.random() - 0.5) * 2;
-            this.y += Math.sin(this.angle) * 1.5 + this.vy + (Math.random() - 0.5) * 2;
-            this.size *= 0.992;
+            this.angle += this.speed * dtFactor;
+            this.x += (Math.cos(this.angle) * 1.5 + this.vx + (Math.random() - 0.5) * 2) * dtFactor;
+            this.y += (Math.sin(this.angle) * 1.5 + this.vy + (Math.random() - 0.5) * 2) * dtFactor;
+            this.size *= Math.pow(0.992, dtFactor);
 
         } else if (this.motionMode === 'zen') {
-            // Zen Güncellemesi: Kepler hızı + Sinüs tabanlı "Nefes Alan" radyal salınım
-            this.angle += this.keplerSpeed;
+            this.angle += this.keplerSpeed * dtFactor;
             
             const time = Date.now() * 0.001;
             const breathOffset = Math.sin(time + this.radius * 0.03) * 7;
@@ -89,18 +81,18 @@ export class Particle {
             this.y = centerPoint.y + Math.sin(this.angle) * currentRadius;
 
         } else if (this.motionMode === 'circle') {
-            this.angle += this.speed;
+            this.angle += this.speed * dtFactor;
             this.x = centerPoint.x + Math.cos(this.angle) * this.radius;
             this.y = centerPoint.y + Math.sin(this.angle) * this.radius;
 
         } else { // Serbest Akış ('free')
-            this.x += this.vx;
-            this.y += this.vy;
-            this.vx *= 0.985;
-            this.vy *= 0.985;
+            this.x += this.vx * dtFactor;
+            this.y += this.vy * dtFactor;
+            this.vx *= Math.pow(0.985, dtFactor);
+            this.vy *= Math.pow(0.985, dtFactor);
         }
 
-        this.life -= this.decay;
+        this.life -= this.decay * dtFactor;
     }
 
     draw(ctx) {

@@ -1,11 +1,15 @@
 :root {
     --bg-dark: #09090b;
-    --panel-bg: rgba(18, 18, 24, 0.85);
-    --border-color: rgba(255, 255, 255, 0.15);
-    --accent-color: #a855f7;
+    --panel-bg: rgba(18, 18, 24, 0.75);
+    --border-color: rgba(255, 255, 255, 0.12);
+    --accent-purple: #a855f7;
+    --accent-blue: #38bdf8;
+    --accent-amber: #fef08a;
+    --accent-red: #ef4444;
     --font-mono: 'Courier New', Courier, monospace;
 }
 
+/* 1. RESET & TEMEL STİLLER */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -23,6 +27,7 @@ body, html {
     color: #fff;
 }
 
+/* 2. TUVAL */
 #starCanvas {
     position: absolute;
     top: 0;
@@ -33,7 +38,7 @@ body, html {
     cursor: crosshair;
 }
 
-/* UI KATMANI */
+/* 3. ARAYÜZ KATMANI & OTO-GİZLENME */
 .ui-layer {
     position: absolute;
     top: 0;
@@ -42,76 +47,101 @@ body, html {
     height: 100%;
     z-index: 2;
     pointer-events: none;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 16px;
+    transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
-.top-bar {
+.ui-layer.drawing-active {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.98);
+}
+
+/* VEGA STAR FLOATING BUTTON (Daha Saydam & Yumuşak) */
+.vega-star-btn {
+    pointer-events: auto;
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    /* Renkleri daha mat ve saydam yaptık */
+    background: radial-gradient(circle at 30% 30%, rgba(254, 240, 138, 0.7) 0%, rgba(56, 189, 248, 0.5) 65%, rgba(30, 27, 75, 0.4) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 100;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    font-size: 0.75rem;
-    opacity: 0.8;
+    justify-content: center;
+    /* Varsayılanda saydamlık (opacity) düşürüldü */
+    opacity: 0.45;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+    transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
 }
 
-.status-badge {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 4px 8px;
-    border-radius: 4px;
-    border: 1px solid var(--border-color);
+/* Üzerine gelindiğinde veya panel açıkken canlansın */
+.vega-star-btn:hover,
+.vega-star-btn.active {
+    opacity: 1;
+    color: #09090b;
+    background: radial-gradient(circle at 30% 30%, var(--accent-amber) 0%, var(--accent-blue) 65%, #1e1b4b 100%);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 25px rgba(56, 189, 248, 0.7), 0 0 40px rgba(254, 240, 138, 0.5);
 }
 
-/* KATLANABİLİR PANEL */
+.vega-star-btn:hover {
+    transform: scale(1.1) rotate(45deg);
+}
+
+.vega-star-btn.active {
+    transform: rotate(90deg);
+}
+
+/* 5. YÜZEN CAM KONTROL PANENİ */
 .controls-panel {
     pointer-events: auto;
+    position: fixed;
+    bottom: 88px;
+    right: 24px;
+    width: 310px;
+    max-height: 80vh;
+    overflow-y: auto;
     background: var(--panel-bg);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 12px;
-    max-width: 380px;
-    width: 100%;
-    margin: 0 auto;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s;
+    z-index: 99;
 }
 
-.panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: bold;
-}
-
-.toggle-btn {
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: transform 0.3s ease;
-}
-
-.controls-panel.collapsed .panel-content {
-    display: none;
-}
-
-.controls-panel.collapsed .toggle-btn {
-    transform: rotate(-90deg);
+.controls-panel.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(20px) scale(0.95);
 }
 
 .panel-content {
-    margin-top: 12px;
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
+.controls-panel::-webkit-scrollbar {
+    width: 4px;
+}
+.controls-panel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+/* 6. GRUPLAR & SLIDER'LAR */
 .control-group {
     display: flex;
     flex-direction: column;
@@ -122,14 +152,16 @@ body, html {
 .slider-group label {
     display: flex;
     justify-content: space-between;
+    opacity: 0.85;
 }
 
 input[type="range"] {
     width: 100%;
-    accent-color: var(--accent-color);
+    accent-color: var(--accent-purple);
     cursor: pointer;
 }
 
+/* 7. BUTON GRİDLERİ & SEÇİCİLER */
 .btn-grid {
     display: flex;
     gap: 6px;
@@ -154,40 +186,20 @@ input[type="range"] {
     border-color: #fff;
 }
 
+/* 8. AKSİYON GRİDİ & ÖZEL BUTONLAR */
 .action-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
     margin-top: 6px;
     border-top: 1px solid var(--border-color);
-    padding-top: 10px;
+    padding-top: 12px;
 }
 
-.btn-record {
-    grid-column: span 2;
-    background: rgba(239, 68, 68, 0.2);
-    border-color: #ef4444;
-    color: #fca5a5;
-    font-weight: bold;
-}
-
-.btn-record.recording {
-    background: #ef4444;
-    color: #fff;
-    animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-input[type="file"] { display: none; }
-/* KAOS MODU BUTONU VE ANİMASYONU */
 .btn-chaos {
     grid-column: span 2;
     background: rgba(168, 85, 247, 0.2);
-    border-color: var(--accent-color);
+    border-color: var(--accent-purple);
     color: #e9d5ff;
     font-weight: bold;
 }
@@ -198,6 +210,26 @@ input[type="file"] { display: none; }
     border-color: #fff;
     box-shadow: 0 0 12px rgba(236, 72, 153, 0.6);
     animation: chaos-glow 2s infinite alternate;
+}
+
+.btn-record {
+    grid-column: span 2;
+    background: rgba(239, 68, 68, 0.2);
+    border-color: var(--accent-red);
+    color: #fca5a5;
+    font-weight: bold;
+}
+
+.btn-record.recording {
+    background: var(--accent-red);
+    color: #fff;
+    animation: pulse 1s infinite;
+}
+
+/* 9. ANİMASYONLAR */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
 }
 
 @keyframes chaos-glow {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'astral-trail-v3.0';
+const CACHE_NAME = 'astral-trail-v2.08';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

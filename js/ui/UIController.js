@@ -4,82 +4,81 @@ export class UIController {
     constructor(canvasEngine, recorder) {
         this.engine = canvasEngine;
         this.recorder = recorder;
+        this.uiLayer = document.querySelector('.ui-layer');
         this.init();
     }
 
     init() {
-        this.bindPanelToggle();
-        this.bindSelectors();
+        this.bindVegaToggle();
+        this.bindDelegatedSelectors();
         this.bindSliders();
         this.bindActions();
+        this.bindAutoHide();
     }
 
-    bindPanelToggle() {
+    bindVegaToggle() {
+        const vegaBtn = document.getElementById('btnVegaToggle');
         const panel = document.getElementById('controlsPanel');
-        const header = document.getElementById('panelToggle');
-        
-        header.addEventListener('click', () => {
-            panel.classList.toggle('collapsed');
-        });
+
+        if (vegaBtn && panel) {
+            vegaBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isHidden = panel.classList.toggle('hidden');
+                vegaBtn.classList.toggle('active', !isHidden);
+            });
+        }
     }
 
-    bindSelectors() {
-        // Hareket Modu Seçimi
-        document.getElementById('motionSelector').addEventListener('click', (e) => {
-            const btn = e.target.closest('.btn');
-            if (!btn) return;
-
-            document.querySelectorAll('#motionSelector .btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            state.motionMode = btn.dataset.value;
+    bindAutoHide() {
+        window.addEventListener('pointerdown', (e) => {
+            if (e.target.closest('#controlsPanel') || e.target.closest('#btnVegaToggle')) return;
+            this.uiLayer.classList.add('drawing-active');
         });
 
-        // Şekil Seçimi
-        document.getElementById('shapeSelector').addEventListener('click', (e) => {
-            const btn = e.target.closest('.btn');
-            if (!btn) return;
-            
-            document.querySelectorAll('#shapeSelector .btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            state.shape = btn.dataset.value;
-        });
+        const revealUI = () => this.uiLayer.classList.remove('drawing-active');
+        window.addEventListener('pointerup', revealUI);
+        window.addEventListener('pointercancel', revealUI);
+    }
 
-        // Renk Seçimi
-        document.getElementById('colorSelector').addEventListener('click', (e) => {
-            const btn = e.target.closest('.btn');
-            if (!btn) return;
+    bindDelegatedSelectors() {
+        const setupGroup = (groupId, stateKey) => {
+            const container = document.getElementById(groupId);
+            if (!container) return;
 
-            document.querySelectorAll('#colorSelector .btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            state.color = btn.dataset.value;
-        });
+            container.addEventListener('click', (e) => {
+                const btn = e.target.closest('.btn');
+                if (!btn) return;
+
+                container.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state[stateKey] = btn.dataset.value;
+            });
+        };
+
+        setupGroup('motionSelector', 'motionMode');
+        setupGroup('shapeSelector', 'shape');
+        setupGroup('colorSelector', 'color');
     }
 
     bindSliders() {
-        const sliderDecay = document.getElementById('sliderDecay');
-        const valDecay = document.getElementById('valDecay');
-        sliderDecay.addEventListener('input', (e) => {
-            state.decayRate = parseFloat(e.target.value);
-            valDecay.textContent = state.decayRate;
-        });
+        const bindInput = (id, targetKey, valId) => {
+            const input = document.getElementById(id);
+            const valDisplay = document.getElementById(valId);
+            if (!input) return;
 
-        const sliderDensity = document.getElementById('sliderDensity');
-        const valDensity = document.getElementById('valDensity');
-        sliderDensity.addEventListener('input', (e) => {
-            state.density = parseInt(e.target.value, 10);
-            valDensity.textContent = state.density;
-        });
+            input.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value);
+                state[targetKey] = val;
+                if (valDisplay) valDisplay.textContent = val;
+            });
+        };
 
-        const sliderSize = document.getElementById('sliderSize');
-        const valSize = document.getElementById('valSize');
-        sliderSize.addEventListener('input', (e) => {
-            state.baseSize = parseInt(e.target.value, 10);
-            valSize.textContent = state.baseSize;
-        });
+        bindInput('sliderDecay', 'decayRate', 'valDecay');
+        bindInput('sliderDensity', 'density', 'valDensity');
+        bindInput('sliderSize', 'baseSize', 'valSize');
     }
 
     bindActions() {
-        // KAOS MODU TOGGLE
         const btnChaos = document.getElementById('btnChaos');
         if (btnChaos) {
             btnChaos.addEventListener('click', () => {
@@ -88,44 +87,38 @@ export class UIController {
             });
         }
 
-        // Temizle
-        document.getElementById('btnClear').addEventListener('click', () => {
-            this.engine.clear();
-        });
+        const btnClear = document.getElementById('btnClear');
+        if (btnClear) {
+            btnClear.addEventListener('click', () => this.engine.clear());
+        }
 
-        // Görsel Yükle
-        document.getElementById('imgUpload').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+        const imgUpload = document.getElementById('imgUpload');
+        if (imgUpload) {
+            imgUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
 
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                const img = new Image();
-                img.onload = () => {
-                    state.bgImage = img;
-                    this.engine.redrawBackground();
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        state.bgImage = img;
+                        this.engine.redrawBackground();
+                    };
+                    img.src = evt.target.result;
                 };
-                img.src = evt.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
-
-        // WebM Kaydet
-        const btnRecord = document.getElementById('btnRecord');
-        const recStatus = document.getElementById('recStatus');
-
-        btnRecord.addEventListener('click', () => {
-            this.recorder.toggleRecording((isRecording) => {
-                if (isRecording) {
-                    btnRecord.classList.add('recording');
-                    btnRecord.textContent = '⏹️ Kaydı Bitir & İndir';
-                    recStatus.textContent = 'REC 🔴';
-                } else {
-                    btnRecord.classList.remove('recording');
-                    btnRecord.textContent = '🎥 .WebM Kaydet';
-                    recStatus.textContent = 'IDLE';
-                }
+                reader.readAsDataURL(file);
             });
-        });
+        }
+
+        const btnRecord = document.getElementById('btnRecord');
+        if (btnRecord) {
+            btnRecord.addEventListener('click', () => {
+                this.recorder.toggleRecording((isRecording) => {
+                    btnRecord.classList.toggle('recording', isRecording);
+                    btnRecord.textContent = isRecording ? '⏹️ Kayıt 🔴' : '🎥 Kaydet';
+                });
+            });
+        }
     }
 }

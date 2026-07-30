@@ -7,6 +7,13 @@ export class CanvasEngine {
         this.ctx = this.canvas.getContext('2d');
         this.particles = [];
         this.isDrawing = false;
+        
+        // Parmağın/Farenin son konumunu hafızada tutuyoruz (Sabit basılı tutma için)
+        this.lastPointerX = 0;
+        this.lastPointerY = 0;
+
+        // Delta Time (120Hz/60Hz ekran bağımsızlığı) için zaman takibi
+        this.lastTime = performance.now();
         this.dpr = window.devicePixelRatio || 1;
 
         this.init();
@@ -19,7 +26,6 @@ export class CanvasEngine {
         this.loop();
     }
 
-    // High-DPI Çözünürlük Katlayıcı
     resize() {
         this.width = window.innerWidth;
         this.height = window.innerHeight;
@@ -62,16 +68,21 @@ export class CanvasEngine {
         }
     }
 
-    bindInputEvents() {
-        // Pointer Events (Hem Fare Hem Dokunmatik Arayüzleri Destekler)
+   bindInputEvents() {
         window.addEventListener('pointerdown', (e) => {
-            if (e.target.closest('.controls-panel')) return; // Panele tıklayınca çizme
+            // Panele veya Vega butonuna tıklandığında çizimi engelle
+            if (e.target.closest('.controls-panel') || e.target.closest('.vega-star-btn')) return;
+            
             this.isDrawing = true;
-            this.spawnParticles(e.clientX, e.clientY);
+            this.lastPointerX = e.clientX;
+            this.lastPointerY = e.clientY;
         });
 
         window.addEventListener('pointermove', (e) => {
-            if (this.isDrawing) this.spawnParticles(e.clientX, e.clientY);
+            if (this.isDrawing) {
+                this.lastPointerX = e.clientX;
+                this.lastPointerY = e.clientY;
+            }
         });
 
         window.addEventListener('pointerup', () => this.isDrawing = false);
@@ -83,8 +94,18 @@ export class CanvasEngine {
         this.redrawBackground();
     }
 
-    loop() {
-        // İzi yumuşatarak kaybetme efekti (Motion Blur)
+    loop(currentTime = performance.now()) {
+        // Delta Time hesabı (60 FPS standart baz alınarak dtFactor üretilir)
+        const dt = (currentTime - this.lastTime) / 1000;
+        this.lastTime = currentTime;
+        const dtFactor = Math.min(dt * 60, 2.0); // Anlık kasmalar/sekme durumları için sınır
+
+        // Ekrana basılı tutuluyorsa hareket olmasa bile her karede yıldız fışkırt
+        if (this.isDrawing) {
+            this.spawnParticles(this.lastPointerX, this.lastPointerY);
+        }
+
+        // Motion Blur karartması
         this.ctx.globalAlpha = 0.05;
         this.ctx.fillStyle = '#09090b';
         this.ctx.fillRect(0, 0, this.width, this.height);
@@ -102,7 +123,7 @@ export class CanvasEngine {
 
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
-            p.update(center);
+            p.update(center, dtFactor);
             p.draw(this.ctx);
 
             if (p.life <= 0) {
@@ -110,6 +131,6 @@ export class CanvasEngine {
             }
         }
 
-        requestAnimationFrame(() => this.loop());
+        requestAnimationFrame((time) => this.loop(time));
     }
 }
