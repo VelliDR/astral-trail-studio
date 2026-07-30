@@ -70,13 +70,17 @@ export class CanvasEngine {
 
    bindInputEvents() {
         window.addEventListener('pointerdown', (e) => {
-            // Panele veya Vega butonuna tıklandığında çizimi engelle
             if (e.target.closest('.controls-panel') || e.target.closest('.vega-star-btn')) return;
             
+            // Dokunmatik cihazda tarayıcı kaydırmasını tamamen durdur
+            if (e.pointerType === 'touch') {
+                e.preventDefault();
+            }
+
             this.isDrawing = true;
             this.lastPointerX = e.clientX;
             this.lastPointerY = e.clientY;
-        });
+        }, { passive: false }); // passive: false, preventDefault'un çalışmasını sağlar
 
         window.addEventListener('pointermove', (e) => {
             if (this.isDrawing) {
@@ -88,7 +92,6 @@ export class CanvasEngine {
         window.addEventListener('pointerup', () => this.isDrawing = false);
         window.addEventListener('pointercancel', () => this.isDrawing = false);
     }
-
     clear() {
         this.particles = [];
         this.redrawBackground();
